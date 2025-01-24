@@ -1,0 +1,5 @@
+venv/
+emotion_recognition_results_*/
+__pycache__/
+data/
+*.pyc
