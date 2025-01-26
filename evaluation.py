@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report, roc_curve, auc
 import seaborn as sns
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -135,4 +135,60 @@ def plot_learning_curves(histories, model_names, output_dir=None):
     
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, 'learning_curves', 'learning_curves.png'))
+    plt.close()
+    
+def analyze_dataset_distribution(df, output_dir):
+    plt.figure(figsize=(12, 6))
+    df['emotion'].value_counts().plot(kind='bar')
+    plt.title('Distribution of Emotions in Dataset')
+    plt.xlabel('Emotion')
+    plt.ylabel('Count')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'data_distribution', 'emotion_distribution.png'))
+    plt.close()
+        
+    plt.figure(figsize=(8, 6))
+    df['source'].value_counts().plot.pie(autopct='%1.1f%%')
+    plt.title('Distribution by Source')
+    plt.savefig(os.path.join(output_dir, 'data_distribution', 'source_distribution.png'))
+    plt.close()
+        
+    plt.figure(figsize=(8, 6))
+    df['gender'].value_counts().plot.pie(autopct='%1.1f%%')
+    plt.title('Gender Distribution') 
+    plt.savefig(os.path.join(output_dir, 'data_distribution', 'gender_distribution.png'))
+    plt.close()
+
+def plot_enhanced_metrics(history, y_test, y_pred, le, output_dir):
+    if 'lr' in history.history:
+        plt.figure(figsize=(10, 6))
+        plt.plot(history.history['lr'])
+        plt.title('Learning Rate over Epochs')
+        plt.xlabel('Epoch')
+        plt.ylabel('Learning Rate')
+        plt.grid(True)
+        plt.savefig(os.path.join(output_dir, 'learning_rate.png'))
+        plt.close()
+    
+    plt.figure(figsize=(12, 8))
+    for i, emotion in enumerate(le.classes_):
+        fpr, tpr, _ = roc_curve(y_test[:, i], y_pred[:, i])
+        roc_auc = auc(fpr, tpr)
+        plt.plot(fpr, tpr, label=f'{emotion} (AUC = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curves per Emotion')
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, 'roc_curves.png'))
+    plt.close()
+    
+    plt.figure(figsize=(12, 6))
+    plt.hist(np.max(y_pred, axis=1), bins=50, density=True)
+    plt.title('Prediction Confidence Distribution')
+    plt.xlabel('Confidence')
+    plt.ylabel('Density')
+    plt.grid(True)
+    plt.savefig(os.path.join(output_dir, 'prediction_confidence.png'))
     plt.close()
